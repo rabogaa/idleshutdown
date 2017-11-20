@@ -1,12 +1,13 @@
-#include <iostream>
+//#include <iostream>
 #include <windows.h>
 
 BOOL EnableSEPrivilege();
-static const LONG minutes = 15; // shutdown in specified minutes
+static const LONG MINUTES = 10; // shutdown in specified MINUTES
 
 INT APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
             PSTR lpCmdLine, INT nCmdShow)
 {
+    ShowWindow( GetConsoleWindow(), SW_HIDE );
     FARPROC addrPtrGetLastTickCount;
 
     HMODULE hModKeyDLL = LoadLibrary(TEXT("libtimer.dll"));
@@ -27,9 +28,9 @@ INT APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
         }
 
         LONG lastTick = addrPtrGetLastTickCount();
-        printf("Last Tick count: %d\n", (INT) lastTick);
-        if (lastTick >= (LONG) 1000 * 60 * minutes) {
-            printf("Shutting down %d", (INT) minutes);
+//        printf("Last Tick count: %d\n", (INT) lastTick);
+        if (lastTick >= (LONG) 1000 * 60 * MINUTES) {
+//            printf("Shutting down %d", (INT) MINUTES);
             if(EnableSEPrivilege()) {
                 InitiateSystemShutdown(nullptr, nullptr, 0, TRUE , FALSE);
             } else {
