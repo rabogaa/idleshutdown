@@ -1,8 +1,8 @@
 #include <iostream>
 #include <windows.h>
 
-BOOL ForceShutdown();
-static const LONG minutes = 1;
+BOOL EnableSEPrivilege();
+static const LONG minutes = 15; // shutdown in specified minutes
 
 INT APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
             PSTR lpCmdLine, INT nCmdShow)
@@ -27,13 +27,16 @@ INT APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
         }
 
         LONG lastTick = addrPtrGetLastTickCount();
-        printf("Last Tick count: %d\n", lastTick);
+        printf("Last Tick count: %d\n", (INT) lastTick);
         if (lastTick >= (LONG) 1000 * 60 * minutes) {
-//            ForceShutdown();
-            printf("Shutting down %d", minutes);
+            printf("Shutting down %d", (INT) minutes);
+            if(EnableSEPrivilege()) {
+                InitiateSystemShutdown(nullptr, nullptr, 0, TRUE , FALSE);
+            } else {
+                MessageBox(nullptr, "Unable to shutdown.", "Error", MB_ICONERROR);
+            }
             break;
         }
-
     }
 
     FreeLibrary(hModKeyDLL);
@@ -42,8 +45,7 @@ INT APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     return 0;
 }
 
-BOOL ForceShutdown() {
-    printf("Windows is shutting down...\n");
+BOOL EnableSEPrivilege() {
 
     HANDLE hToken;
     TOKEN_PRIVILEGES tkp;
@@ -56,12 +58,9 @@ BOOL ForceShutdown() {
     tkp.PrivilegeCount = 1;
     tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
 
-    AdjustTokenPrivileges(hToken, FALSE, &tkp, 0, (PTOKEN_PRIVILEGES) nullptr, 0);
+    AdjustTokenPrivileges(hToken, FALSE, &tkp, 0, (PTOKEN_PRIVILEGES) nullptr, nullptr);
 
     if (GetLastError() != ERROR_SUCCESS)
-        return FALSE;
-
-    if(InitiateSystemShutdown(nullptr, nullptr, 0, TRUE , FALSE))
         return FALSE;
 
     return TRUE;
